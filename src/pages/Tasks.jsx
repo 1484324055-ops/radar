@@ -5,7 +5,7 @@ import useStore from '../stores/useStore'
 import { STATUS_LABELS, STATUS_ICONS, PRIORITY_LABELS, CATEGORY_LABELS, DAY_NAMES } from '../utils/constants'
 import EmptyState from '../components/EmptyState'
 
-function TaskCard({ task, onCycleStatus, onAddNote, onDelete, onUpdateDay }) {
+function TaskCard({ task, onCycleStatus, onAddNote, onDelete, onUpdateDay, onNotDoing }) {
   const [expanded, setExpanded] = useState(false)
   const [noteText, setNoteText] = useState('')
 
@@ -196,12 +196,18 @@ function TaskCard({ task, onCycleStatus, onAddNote, onDelete, onUpdateDay }) {
           </div>
 
           {/* Actions */}
-          <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+          <div style={{ display: 'flex', gap: '8px', marginTop: '10px', justifyContent: 'flex-end' }}>
             <button
-              onClick={() => onUpdateDay(task.id, task.day)}
-              style={{ fontSize: '12px', color: 'var(--text-tertiary)', background: 'none', padding: '4px 0' }}
+              onClick={() => onNotDoing(task.id)}
+              style={{
+                fontSize: '12px',
+                color: 'var(--text-tertiary)',
+                background: 'var(--bg-tertiary)',
+                padding: '4px 12px',
+                borderRadius: '8px',
+              }}
             >
-              {/* placeholder for alignment */}
+              不做
             </button>
             <button
               onClick={() => onDelete(task.id)}
@@ -211,7 +217,6 @@ function TaskCard({ task, onCycleStatus, onAddNote, onDelete, onUpdateDay }) {
                 background: 'var(--danger-bg)',
                 padding: '4px 12px',
                 borderRadius: '8px',
-                marginLeft: 'auto',
               }}
             >
               删除
@@ -485,6 +490,7 @@ export default function Tasks() {
             onAddNote={addTaskNote}
             onDelete={deleteTask}
             onUpdateDay={(id, day) => updateTask(id, { day })}
+            onNotDoing={(id) => updateTask(id, { status: 'not-doing' })}
           />
         ))
       )}

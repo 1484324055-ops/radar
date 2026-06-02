@@ -50,18 +50,33 @@ export default function Settings() {
   const campaigns = useStore((s) => s.campaigns)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
 
-  const handleExport = () => {
+  const handleExport = async () => {
     const data = exportData()
+    const filename = `radar-backup-${new Date().toISOString().slice(0, 10)}.json`
+
+    // iOS Safari: try native share API first
+    if (navigator.share && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
+      try {
+        const file = new File([data], filename, { type: 'application/json' })
+        await navigator.share({ files: [file], title: '雷达数据备份' })
+        return
+      } catch (e) {
+        // User cancelled or share failed, fall through to download
+      }
+    }
+
     const blob = new Blob([data], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `radar-backup-${new Date().toISOString().slice(0, 10)}.json`
+    a.download = filename
     a.click()
     URL.revokeObjectURL(url)
   }
 
   const handleImport = () => {
+    if (!confirm('导入将覆盖当前所有数据，建议先导出备份。确定继续？')) return
+
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = '.json'

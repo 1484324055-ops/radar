@@ -10,6 +10,7 @@ export default function QuickCapture() {
   const addCapture = useStore((s) => s.addCapture)
   const inputRef = useRef(null)
   const { isListening, transcript, startListening, stopListening, resetTranscript, isSupported } = useVoice()
+  const prevTranscriptRef = useRef('')
 
   useEffect(() => {
     if (showQuickCapture && inputRef.current) {
@@ -18,8 +19,12 @@ export default function QuickCapture() {
   }, [showQuickCapture])
 
   useEffect(() => {
-    if (transcript) {
-      setText(transcript)
+    if (transcript && transcript !== prevTranscriptRef.current) {
+      setText((prev) => {
+        const newPart = transcript.slice(prevTranscriptRef.current.length)
+        return prev + newPart
+      })
+      prevTranscriptRef.current = transcript
     }
   }, [transcript])
 

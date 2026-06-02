@@ -196,7 +196,7 @@ export default function Inbox() {
                 不需要
               </button>
               <button
-                onClick={() => deleteCapture(c.id)}
+                onClick={() => { if (confirm('确定删除这条倾倒？')) deleteCapture(c.id) }}
                 style={{
                   width: '36px',
                   height: '36px',

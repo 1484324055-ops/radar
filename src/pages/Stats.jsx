@@ -2,10 +2,10 @@ import { useMemo, lazy, Suspense } from 'react'
 import { TrendingUp, Target, CheckCircle2, Clock } from 'lucide-react'
 import useStore from '../stores/useStore'
 import { STATUS, CATEGORY_LABELS } from '../utils/constants'
-import { getPastWeeks, isThisWeek } from '../utils/helpers'
+import { getPastWeeks, getThisWeekTasks } from '../utils/helpers'
 
 // Dynamic import recharts to reduce initial bundle size
-const RechartsLazy = lazy(() => import('recharts'))
+const RechartsLazy = lazy(() => import('recharts').then(m => ({ default: m })))
 
 const COLORS = ['#8B5CF6', '#F97316', '#06B6D4']
 
@@ -112,14 +112,14 @@ export default function Stats() {
   const campaigns = useStore((s) => s.campaigns)
 
   const weekStats = useMemo(() => {
-    const weekTasks = tasks.filter((t) => isThisWeek(t.createdAt))
+    const weekTasks = getThisWeekTasks(tasks)
     const total = weekTasks.length
     const done = weekTasks.filter((t) => t.status === STATUS.DONE).length
     return { total, done, rate: total > 0 ? Math.round((done / total) * 100) : 0 }
   }, [tasks])
 
   const categoryData = useMemo(() => {
-    const weekTasks = tasks.filter((t) => t.status !== 'not-doing' && isThisWeek(t.createdAt))
+    const weekTasks = getThisWeekTasks(tasks).filter((t) => t.status !== 'not-doing')
     const counts = { breakthrough: 0, debt: 0, relation: 0 }
     weekTasks.forEach((t) => {
       if (counts[t.category] !== undefined) counts[t.category]++

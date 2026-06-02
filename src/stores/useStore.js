@@ -18,8 +18,10 @@ function saveToStorage(state) {
   try {
     const { theme, captures, tasks, campaigns, dailyLogs } = state
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ theme, captures, tasks, campaigns, dailyLogs }))
+    return null
   } catch (e) {
     console.error('Failed to save data:', e)
+    return e.name === 'QuotaExceededError' ? '存储空间已满，请导出数据后清理' : '数据保存失败'
   }
 }
 
@@ -30,16 +32,26 @@ const defaultState = {
   campaigns: [],
   dailyLogs: {},
   showQuickCapture: false,
+  saveError: null,
+}
+
+// Helper: save and return state update with error handling
+function save(s, updates) {
+  const merged = { ...s, ...updates }
+  const err = saveToStorage(merged)
+  return { ...updates, saveError: err }
 }
 
 const useStore = create((set, get) => ({
   ...defaultState,
   ...(loadFromStorage() || {}),
+  saveError: null,
+
+  clearSaveError: () => set({ saveError: null }),
 
   // ── Theme ──
   setTheme: (theme) => {
-    set({ theme })
-    saveToStorage({ ...get(), theme })
+    set((s) => save(s, { theme }))
   },
 
   // ── Quick Capture toggle ──
@@ -54,27 +66,15 @@ const useStore = create((set, get) => ({
       createdAt: new Date().toISOString(),
       processed: false,
     }
-    set((s) => {
-      const captures = [capture, ...s.captures]
-      saveToStorage({ ...s, captures })
-      return { captures }
-    })
+    set((s) => save(s, { captures: [capture, ...s.captures] }))
   },
 
   deleteCapture: (id) => {
-    set((s) => {
-      const captures = s.captures.filter((c) => c.id !== id)
-      saveToStorage({ ...s, captures })
-      return { captures }
-    })
+    set((s) => save(s, { captures: s.captures.filter((c) => c.id !== id) }))
   },
 
   markCaptureProcessed: (id) => {
-    set((s) => {
-      const captures = s.captures.map((c) => (c.id === id ? { ...c, processed: true } : c))
-      saveToStorage({ ...s, captures })
-      return { captures }
-    })
+    set((s) => save(s, { captures: s.captures.map((c) => (c.id === id ? { ...c, processed: true } : c)) }))
   },
 
   // ── Tasks ──
@@ -93,28 +93,16 @@ const useStore = create((set, get) => ({
       notes: [],
       createdAt: new Date().toISOString(),
     }
-    set((s) => {
-      const tasks = [newTask, ...s.tasks]
-      saveToStorage({ ...s, tasks })
-      return { tasks }
-    })
+    set((s) => save(s, { tasks: [newTask, ...s.tasks] }))
     return newTask.id
   },
 
   updateTask: (id, updates) => {
-    set((s) => {
-      const tasks = s.tasks.map((t) => (t.id === id ? { ...t, ...updates } : t))
-      saveToStorage({ ...s, tasks })
-      return { tasks }
-    })
+    set((s) => save(s, { tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...updates } : t)) }))
   },
 
   deleteTask: (id) => {
-    set((s) => {
-      const tasks = s.tasks.filter((t) => t.id !== id)
-      saveToStorage({ ...s, tasks })
-      return { tasks }
-    })
+    set((s) => save(s, { tasks: s.tasks.filter((t) => t.id !== id) }))
   },
 
   cycleTaskStatus: (id) => {
@@ -124,24 +112,17 @@ const useStore = create((set, get) => ({
       if (!task) return s
       const idx = cycle.indexOf(task.status)
       const next = cycle[(idx + 1) % cycle.length]
-      const tasks = s.tasks.map((t) => (t.id === id ? { ...t, status: next } : t))
-      saveToStorage({ ...s, tasks })
-      return { tasks }
+      return save(s, { tasks: s.tasks.map((t) => (t.id === id ? { ...t, status: next } : t)) })
     })
   },
 
   addTaskNote: (taskId, content) => {
-    set((s) => {
-      const tasks = s.tasks.map((t) => {
+    set((s) => save(s, {
+      tasks: s.tasks.map((t) => {
         if (t.id !== taskId) return t
-        return {
-          ...t,
-          notes: [...(t.notes || []), { content, createdAt: new Date().toISOString() }],
-        }
-      })
-      saveToStorage({ ...s, tasks })
-      return { tasks }
-    })
+        return { ...t, notes: [...(t.notes || []), { content, createdAt: new Date().toISOString() }] }
+      }),
+    }))
   },
 
   // ── Campaigns (主战役) ──
@@ -154,67 +135,44 @@ const useStore = create((set, get) => ({
       progress: [],
       createdAt: new Date().toISOString(),
     }
-    set((s) => {
-      const campaigns = [newCampaign, ...s.campaigns]
-      saveToStorage({ ...s, campaigns })
-      return { campaigns }
-    })
+    set((s) => save(s, { campaigns: [newCampaign, ...s.campaigns] }))
     return newCampaign.id
   },
 
   updateCampaign: (id, updates) => {
-    set((s) => {
-      const campaigns = s.campaigns.map((c) => (c.id === id ? { ...c, ...updates } : c))
-      saveToStorage({ ...s, campaigns })
-      return { campaigns }
-    })
+    set((s) => save(s, { campaigns: s.campaigns.map((c) => (c.id === id ? { ...c, ...updates } : c)) }))
   },
 
   deleteCampaign: (id) => {
-    set((s) => {
-      const campaigns = s.campaigns.filter((c) => c.id !== id)
-      // Also unlink tasks
-      const tasks = s.tasks.map((t) => (t.campaignId === id ? { ...t, campaignId: null } : t))
-      saveToStorage({ ...s, campaigns, tasks })
-      return { campaigns, tasks }
-    })
+    set((s) => save(s, {
+      campaigns: s.campaigns.filter((c) => c.id !== id),
+      tasks: s.tasks.map((t) => (t.campaignId === id ? { ...t, campaignId: null } : t)),
+    }))
   },
 
   addCampaignProgress: (campaignId, content) => {
-    set((s) => {
-      const campaigns = s.campaigns.map((c) => {
+    set((s) => save(s, {
+      campaigns: s.campaigns.map((c) => {
         if (c.id !== campaignId) return c
-        return {
-          ...c,
-          progress: [...(c.progress || []), { content, createdAt: new Date().toISOString() }],
-        }
-      })
-      saveToStorage({ ...s, campaigns })
-      return { campaigns }
-    })
+        return { ...c, progress: [...(c.progress || []), { content, createdAt: new Date().toISOString() }] }
+      }),
+    }))
   },
 
   // ── Daily Logs ──
   setDailyLog: (date, log) => {
-    set((s) => {
-      const dailyLogs = { ...s.dailyLogs, [date]: { ...s.dailyLogs[date], ...log } }
-      saveToStorage({ ...s, dailyLogs })
-      return { dailyLogs }
-    })
+    set((s) => save(s, { dailyLogs: { ...s.dailyLogs, [date]: { ...s.dailyLogs[date], ...log } } }))
   },
 
   addDailyReflection: (date, content) => {
     set((s) => {
       const existing = s.dailyLogs[date] || { reflections: [] }
-      const dailyLogs = {
-        ...s.dailyLogs,
-        [date]: {
-          ...existing,
-          reflections: [...(existing.reflections || []), { content, createdAt: new Date().toISOString() }],
+      return save(s, {
+        dailyLogs: {
+          ...s.dailyLogs,
+          [date]: { ...existing, reflections: [...(existing.reflections || []), { content, createdAt: new Date().toISOString() }] },
         },
-      }
-      saveToStorage({ ...s, dailyLogs })
-      return { dailyLogs }
+      })
     })
   },
 
@@ -227,14 +185,16 @@ const useStore = create((set, get) => ({
   importData: (jsonStr) => {
     try {
       const data = JSON.parse(jsonStr)
-      set({
-        theme: data.theme || 'light',
-        captures: data.captures || [],
-        tasks: data.tasks || [],
-        campaigns: data.campaigns || [],
-        dailyLogs: data.dailyLogs || {},
-      })
-      saveToStorage(data)
+      // Validate imported data structure
+      const validated = {
+        theme: ['light', 'dark', 'warm'].includes(data.theme) ? data.theme : 'light',
+        captures: Array.isArray(data.captures) ? data.captures : [],
+        tasks: Array.isArray(data.tasks) ? data.tasks : [],
+        campaigns: Array.isArray(data.campaigns) ? data.campaigns : [],
+        dailyLogs: data.dailyLogs && typeof data.dailyLogs === 'object' ? data.dailyLogs : {},
+      }
+      set({ ...validated, saveError: null })
+      saveToStorage(validated)
       return true
     } catch (e) {
       console.error('Import failed:', e)

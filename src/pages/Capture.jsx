@@ -9,9 +9,16 @@ export default function Capture() {
   const captures = useStore((s) => s.captures)
   const inputRef = useRef(null)
   const { isListening, transcript, error: voiceError, startListening, stopListening, resetTranscript, isSupported, isStandalone } = useVoice()
+  const prevTranscriptRef = useRef('')
 
   useEffect(() => {
-    if (transcript) setText(transcript)
+    if (transcript && transcript !== prevTranscriptRef.current) {
+      setText((prev) => {
+        const newPart = transcript.slice(prevTranscriptRef.current.length)
+        return prev + newPart
+      })
+      prevTranscriptRef.current = transcript
+    }
   }, [transcript])
 
   const handleSubmit = () => {

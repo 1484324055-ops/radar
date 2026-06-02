@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Zap, Target, CheckCircle2, Clock, Pause, TrendingUp, ChevronRight, Settings, HelpCircle } from 'lucide-react'
 import useStore from '../stores/useStore'
 import { STATUS, DAY_ROLES } from '../utils/constants'
-import { getDayIndex, getTodayLabel, getWeekLabel, isThisWeek } from '../utils/helpers'
+import { getDayIndex, getTodayLabel, getWeekLabel, isThisWeek, getThisWeekTasks } from '../utils/helpers'
 
 function StatCard({ icon, label, value, color, onClick }) {
   return (
@@ -39,7 +39,7 @@ export default function Dashboard() {
   const todayRole = DAY_ROLES[todayIdx]
 
   const stats = useMemo(() => {
-    const weekTasks = tasks.filter((t) => t.day || isThisWeek(t.createdAt))
+    const weekTasks = getThisWeekTasks(tasks)
     return {
       total: weekTasks.length,
       done: weekTasks.filter((t) => t.status === STATUS.DONE).length,

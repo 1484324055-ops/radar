@@ -17,7 +17,13 @@ function CampaignSection() {
   const [pushPlan, setPushPlan] = useState('')
   const [progressText, setProgressText] = useState({})
 
-  const weekCampaigns = useMemo(() => campaigns.filter((c) => isThisWeek(c.createdAt)), [campaigns])
+  const weekCampaigns = useMemo(() => {
+    return campaigns.filter((c) => {
+      if (isThisWeek(c.createdAt)) return true
+      // Also show campaigns that still have in-progress tasks
+      return tasks.some((t) => t.campaignId === c.id && t.status === 'in-progress')
+    })
+  }, [campaigns, tasks])
 
   const handleAdd = () => {
     if (!title.trim()) return

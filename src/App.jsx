@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 import useTheme from './hooks/useTheme'
 import useStore from './stores/useStore'
 import TabBar from './components/TabBar'
@@ -18,6 +18,37 @@ import Help from './pages/Help'
 
 const ONBOARDING_KEY = 'radar-onboarding-done'
 
+function SaveErrorBanner() {
+  const saveError = useStore((s) => s.saveError)
+  const clearSaveError = useStore((s) => s.clearSaveError)
+  if (!saveError) return null
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: 'var(--sat)',
+        left: 0,
+        right: 0,
+        zIndex: 200,
+        background: 'var(--danger)',
+        color: '#fff',
+        padding: '10px 16px',
+        fontSize: '13px',
+        fontWeight: 500,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}
+    >
+      <span>{saveError}</span>
+      <button onClick={clearSaveError} style={{ background: 'none', color: '#fff', padding: '4px' }}>
+        <X size={16} />
+      </button>
+    </div>
+  )
+}
+
 function FloatingCaptureButton() {
   const toggleQuickCapture = useStore((s) => s.toggleQuickCapture)
   const location = useLocation()
@@ -26,6 +57,8 @@ function FloatingCaptureButton() {
   return (
     <button
       onClick={toggleQuickCapture}
+      aria-label="倾倒想法"
+      title="倾倒想法"
       style={{
         position: 'fixed',
         right: '20px',
@@ -71,7 +104,8 @@ export default function App() {
 
   return (
     <>
-      <div className="page-content" style={{ flex: 1, overflow: 'hidden' }}>
+      <SaveErrorBanner />
+      <div style={{ flex: 1, overflow: 'hidden' }}>
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/capture" element={<Capture />} />
