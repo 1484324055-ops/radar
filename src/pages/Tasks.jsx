@@ -1,13 +1,19 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, ChevronDown, ChevronUp, Circle, CircleDot, CheckCircle2, Pause, X, MessageSquare, Calendar, Ban } from 'lucide-react'
+import { Plus, ChevronDown, ChevronUp, Circle, CircleDot, CheckCircle2, Pause, X, MessageSquare, Calendar, Ban, Search, Filter } from 'lucide-react'
 import useStore from '../stores/useStore'
 import { STATUS_LABELS, STATUS_ICONS, PRIORITY_LABELS, CATEGORY_LABELS, DAY_NAMES } from '../utils/constants'
+import { getDayIndex } from '../utils/helpers'
+import { hapticLight, hapticSuccess } from '../utils/haptics'
 import EmptyState from '../components/EmptyState'
+import StatusPicker from '../components/StatusPicker'
+import SwipeableCard from '../components/SwipeableCard'
 
-function TaskCard({ task, onCycleStatus, onAddNote, onDelete, onUpdateDay, onNotDoing }) {
+function TaskCard({ task, onStatusChange, onAddNote, onDelete, onUpdateDay, onNotDoing }) {
   const [expanded, setExpanded] = useState(false)
   const [noteText, setNoteText] = useState('')
+  const [showStatusPicker, setShowStatusPicker] = useState(false)
+  const longPressRef = useRef(null)
 
   const statusColors = {
     'not-started': 'var(--text-tertiary)',
@@ -23,8 +29,29 @@ function TaskCard({ task, onCycleStatus, onAddNote, onDelete, onUpdateDay, onNot
     setNoteText('')
   }
 
-  return (
-    <div className="card" style={{ marginBottom: '8px', padding: '12px 14px' }}>
+  // Long press to show status picker
+  const handlePointerDown = () => {
+    longPressRef.current = setTimeout(() => {
+      hapticLight()
+      setShowStatusPicker(true)
+    }, 500)
+  }
+
+  const handlePointerUp = () => {
+    if (longPressRef.current) {
+      clearTimeout(longPressRef.current)
+      longPressRef.current = null
+    }
+  }
+
+  const cardContent = (
+    <div
+      className="card"
+      style={{ marginBottom: 0, padding: '12px 14px' }}
+      onTouchStart={handlePointerDown}
+      onTouchEnd={handlePointerUp}
+      onTouchCancel={handlePointerUp}
+    >
       <div
         style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
         onClick={() => setExpanded(!expanded)}
@@ -32,7 +59,8 @@ function TaskCard({ task, onCycleStatus, onAddNote, onDelete, onUpdateDay, onNot
         <button
           onClick={(e) => {
             e.stopPropagation()
-            onCycleStatus(task.id)
+            hapticLight()
+            onStatusChange(task.id)
           }}
           style={{ background: 'none', color: statusColors[task.status], flexShrink: 0, padding: '2px' }}
         >
@@ -224,7 +252,34 @@ function TaskCard({ task, onCycleStatus, onAddNote, onDelete, onUpdateDay, onNot
           </div>
         </div>
       )}
+
+      {showStatusPicker && (
+        <StatusPicker
+          current={task.status}
+          onSelect={(status) => onStatusChange(task.id, status)}
+          onClose={() => setShowStatusPicker(false)}
+        />
+      )}
     </div>
+  )
+
+  // Wrap with swipe gestures for non-done tasks
+  if (task.status === 'done') {
+    return cardContent
+  }
+
+  return (
+    <SwipeableCard
+      onSwipeLeft={() => onDelete(task.id)}
+      onSwipeRight={() => {
+        hapticSuccess()
+        onStatusChange(task.id, 'done')
+      }}
+      leftLabel="删除"
+      rightLabel="完成"
+    >
+      {cardContent}
+    </SwipeableCard>
   )
 }
 
@@ -371,17 +426,33 @@ export default function Tasks() {
   const navigate = useNavigate()
   const tasks = useStore((s) => s.tasks)
   const cycleTaskStatus = useStore((s) => s.cycleTaskStatus)
+  const updateTask = useStore((s) => s.updateTask)
   const addTask = useStore((s) => s.addTask)
   const addTaskNote = useStore((s) => s.addTaskNote)
   const deleteTask = useStore((s) => s.deleteTask)
-  const updateTask = useStore((s) => s.updateTask)
   const [filter, setFilter] = useState('all')
   const [showAdd, setShowAdd] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const todayIdx = getDayIndex()
 
   const filteredTasks = useMemo(() => {
-    if (filter === 'all') return tasks.filter((t) => t.status !== 'not-doing')
-    return tasks.filter((t) => t.status === filter)
-  }, [tasks, filter])
+    let result = tasks.filter((t) => t.status !== 'not-doing')
+
+    // Apply status filter
+    if (filter === 'today') {
+      result = result.filter((t) => t.day === todayIdx)
+    } else if (filter !== 'all') {
+      result = result.filter((t) => t.status === filter)
+    }
+
+    // Apply search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      result = result.filter((t) => t.title.toLowerCase().includes(q))
+    }
+
+    return result
+  }, [tasks, filter, searchQuery, todayIdx])
 
   const counts = useMemo(
     () => ({
@@ -391,21 +462,31 @@ export default function Tasks() {
       done: tasks.filter((t) => t.status === 'done').length,
       paused: tasks.filter((t) => t.status === 'paused').length,
       'not-doing': tasks.filter((t) => t.status === 'not-doing').length,
+      today: tasks.filter((t) => t.day === todayIdx && t.status !== 'not-doing').length,
     }),
-    [tasks]
+    [tasks, todayIdx]
   )
 
   const filters = [
     { key: 'all', label: '全部' },
+    { key: 'today', label: '今日' },
     { key: 'not-started', label: '未开始' },
     { key: 'in-progress', label: '进行中' },
     { key: 'done', label: '已完成' },
     { key: 'paused', label: '暂停' },
   ]
 
+  const handleStatusChange = (id, status) => {
+    if (status) {
+      updateTask(id, { status })
+    } else {
+      cycleTaskStatus(id)
+    }
+  }
+
   return (
     <div className="page-content" style={{ padding: '16px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)' }}>任务池</div>
           {counts['not-doing'] > 0 && (
@@ -446,6 +527,32 @@ export default function Tasks() {
         </button>
       </div>
 
+      {/* Search */}
+      <div style={{ position: 'relative', marginBottom: '12px' }}>
+        <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
+        <input
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="搜索任务..."
+          style={{
+            width: '100%',
+            padding: '10px 12px 10px 36px',
+            borderRadius: '12px',
+            fontSize: '16px',
+            background: 'var(--bg-tertiary)',
+            border: '1px solid transparent',
+          }}
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', color: 'var(--text-tertiary)', padding: '4px' }}
+          >
+            <X size={16} />
+          </button>
+        )}
+      </div>
+
       {/* Filters */}
       <div
         style={{
@@ -480,13 +587,17 @@ export default function Tasks() {
 
       {/* Task List */}
       {filteredTasks.length === 0 ? (
-        <EmptyState icon="📋" title="没有任务" description="从待处理池翻译，或直接创建" />
+        <EmptyState
+          icon="📋"
+          title={searchQuery ? '没有找到匹配的任务' : filter === 'today' ? '今天没有分配的任务' : '没有任务'}
+          description={searchQuery ? '换个关键词试试' : filter === 'today' ? '去任务详情里分配到今天' : '从待处理池翻译，或直接创建'}
+        />
       ) : (
         filteredTasks.map((task) => (
           <TaskCard
             key={task.id}
             task={task}
-            onCycleStatus={cycleTaskStatus}
+            onStatusChange={handleStatusChange}
             onAddNote={addTaskNote}
             onDelete={deleteTask}
             onUpdateDay={(id, day) => updateTask(id, { day })}

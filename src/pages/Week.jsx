@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Target, Plus, X, ChevronRight } from 'lucide-react'
 import useStore from '../stores/useStore'
 import { DAY_NAMES, DAY_ROLES, CATEGORY_LABELS, STATUS_LABELS, STATUS_ICONS } from '../utils/constants'
@@ -245,11 +246,28 @@ function WeekSchedule() {
 }
 
 export default function Week() {
+  const navigate = useNavigate()
+
   return (
     <div className="page-content" style={{ padding: '16px' }}>
-      <div style={{ marginBottom: '20px' }}>
-        <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>本周</div>
-        <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>{getWeekLabel()}</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+        <div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>本周</div>
+          <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>{getWeekLabel()}</div>
+        </div>
+        <button
+          onClick={() => navigate('/weekly-review')}
+          style={{
+            padding: '6px 14px',
+            borderRadius: '10px',
+            background: 'var(--accent-bg)',
+            color: 'var(--accent)',
+            fontSize: '13px',
+            fontWeight: 600,
+          }}
+        >
+          周复盘
+        </button>
       </div>
 
       <CampaignSection />

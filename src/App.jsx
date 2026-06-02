@@ -15,6 +15,8 @@ import Stats from './pages/Stats'
 import Settings from './pages/Settings'
 import NotDoing from './pages/NotDoing'
 import Help from './pages/Help'
+import DailyReview from './pages/DailyReview'
+import WeeklyReview from './pages/WeeklyReview'
 
 const ONBOARDING_KEY = 'radar-onboarding-done'
 
@@ -116,6 +118,8 @@ export default function App() {
           <Route path="/stats" element={<Stats />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/help" element={<Help />} />
+          <Route path="/daily-review" element={<DailyReview />} />
+          <Route path="/weekly-review" element={<WeeklyReview />} />
         </Routes>
       </div>
       <TabBar />
