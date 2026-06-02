@@ -8,7 +8,7 @@ export default function Capture() {
   const addCapture = useStore((s) => s.addCapture)
   const captures = useStore((s) => s.captures)
   const inputRef = useRef(null)
-  const { isListening, transcript, startListening, stopListening, resetTranscript, isSupported } = useVoice()
+  const { isListening, transcript, error: voiceError, startListening, stopListening, resetTranscript, isSupported, isStandalone } = useVoice()
 
   useEffect(() => {
     if (transcript) setText(transcript)
@@ -121,6 +121,38 @@ export default function Capture() {
             }}
           >
             正在录音，说完点击停止...
+          </div>
+        )}
+
+        {voiceError && (
+          <div
+            style={{
+              marginTop: '10px',
+              padding: '8px 12px',
+              borderRadius: '10px',
+              background: 'var(--warning-bg)',
+              color: 'var(--warning)',
+              fontSize: '13px',
+              textAlign: 'center',
+            }}
+          >
+            {voiceError}
+          </div>
+        )}
+
+        {isStandalone && !voiceError && (
+          <div
+            style={{
+              marginTop: '10px',
+              padding: '8px 12px',
+              borderRadius: '10px',
+              background: 'var(--bg-tertiary)',
+              color: 'var(--text-tertiary)',
+              fontSize: '12px',
+              textAlign: 'center',
+            }}
+          >
+            从主屏幕打开时语音可能不可用，建议用 Safari 打开使用语音功能
           </div>
         )}
       </div>

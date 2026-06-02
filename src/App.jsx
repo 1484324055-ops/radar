@@ -1,9 +1,11 @@
+import { useState, useEffect } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import useTheme from './hooks/useTheme'
 import useStore from './stores/useStore'
 import TabBar from './components/TabBar'
 import QuickCapture from './components/QuickCapture'
+import Onboarding from './components/Onboarding'
 import Dashboard from './pages/Dashboard'
 import Capture from './pages/Capture'
 import Inbox from './pages/Inbox'
@@ -11,12 +13,14 @@ import Tasks from './pages/Tasks'
 import Week from './pages/Week'
 import Stats from './pages/Stats'
 import Settings from './pages/Settings'
+import NotDoing from './pages/NotDoing'
+
+const ONBOARDING_KEY = 'radar-onboarding-done'
 
 function FloatingCaptureButton() {
   const toggleQuickCapture = useStore((s) => s.toggleQuickCapture)
   const location = useLocation()
-  // Hide on capture page (redundant) and settings
-  if (location.pathname === '/capture' || location.pathname === '/settings') return null
+  if (location.pathname === '/capture' || location.pathname === '/settings' || location.pathname === '/not-doing') return null
 
   return (
     <button
@@ -48,6 +52,18 @@ function FloatingCaptureButton() {
 
 export default function App() {
   useTheme()
+  const [showOnboarding, setShowOnboarding] = useState(false)
+
+  useEffect(() => {
+    if (!localStorage.getItem(ONBOARDING_KEY)) {
+      setShowOnboarding(true)
+    }
+  }, [])
+
+  const handleOnboardingComplete = () => {
+    localStorage.setItem(ONBOARDING_KEY, '1')
+    setShowOnboarding(false)
+  }
 
   return (
     <>
@@ -57,6 +73,7 @@ export default function App() {
           <Route path="/capture" element={<Capture />} />
           <Route path="/inbox" element={<Inbox />} />
           <Route path="/tasks" element={<Tasks />} />
+          <Route path="/not-doing" element={<NotDoing />} />
           <Route path="/week" element={<Week />} />
           <Route path="/stats" element={<Stats />} />
           <Route path="/settings" element={<Settings />} />
@@ -65,6 +82,7 @@ export default function App() {
       <TabBar />
       <FloatingCaptureButton />
       <QuickCapture />
+      {showOnboarding && <Onboarding onComplete={handleOnboardingComplete} />}
     </>
   )
 }

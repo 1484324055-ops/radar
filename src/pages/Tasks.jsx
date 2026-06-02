@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react'
-import { Plus, ChevronDown, ChevronUp, Circle, CircleDot, CheckCircle2, Pause, X, MessageSquare } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Plus, ChevronDown, ChevronUp, Circle, CircleDot, CheckCircle2, Pause, X, MessageSquare, Calendar, Ban } from 'lucide-react'
 import useStore from '../stores/useStore'
-import { STATUS, STATUS_LABELS, STATUS_ICONS, PRIORITY_LABELS, CATEGORY_LABELS, CATEGORY } from '../utils/constants'
+import { STATUS_LABELS, STATUS_ICONS, PRIORITY_LABELS, CATEGORY_LABELS, DAY_NAMES } from '../utils/constants'
 import EmptyState from '../components/EmptyState'
 
-function TaskCard({ task, onCycleStatus, onAddNote, onDelete }) {
+function TaskCard({ task, onCycleStatus, onAddNote, onDelete, onUpdateDay }) {
   const [expanded, setExpanded] = useState(false)
   const [noteText, setNoteText] = useState('')
 
@@ -81,6 +82,19 @@ function TaskCard({ task, onCycleStatus, onAddNote, onDelete }) {
                 {PRIORITY_LABELS.campaign}
               </span>
             )}
+            {task.day !== null && task.day !== undefined && (
+              <span
+                style={{
+                  fontSize: '11px',
+                  padding: '2px 6px',
+                  borderRadius: '6px',
+                  background: 'var(--bg-tertiary)',
+                  color: 'var(--text-secondary)',
+                }}
+              >
+                {DAY_NAMES[task.day]}
+              </span>
+            )}
           </div>
         </div>
         <div style={{ color: 'var(--text-tertiary)', flexShrink: 0 }}>
@@ -93,6 +107,44 @@ function TaskCard({ task, onCycleStatus, onAddNote, onDelete }) {
           {task.description && (
             <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>{task.description}</div>
           )}
+
+          {/* Day Assignment */}
+          <div style={{ marginBottom: '10px' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Calendar size={12} /> 分配到
+            </div>
+            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => onUpdateDay(task.id, null)}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                  background: task.day === null || task.day === undefined ? 'var(--accent-bg)' : 'var(--bg-tertiary)',
+                  color: task.day === null || task.day === undefined ? 'var(--accent)' : 'var(--text-tertiary)',
+                  fontWeight: 500,
+                }}
+              >
+                不限
+              </button>
+              {DAY_NAMES.map((name, i) => (
+                <button
+                  key={i}
+                  onClick={() => onUpdateDay(task.id, i)}
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    background: task.day === i ? 'var(--accent-bg)' : 'var(--bg-tertiary)',
+                    color: task.day === i ? 'var(--accent)' : 'var(--text-tertiary)',
+                    fontWeight: task.day === i ? 600 : 400,
+                  }}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* Notes */}
           {task.notes && task.notes.length > 0 && (
@@ -143,19 +195,28 @@ function TaskCard({ task, onCycleStatus, onAddNote, onDelete }) {
             </button>
           </div>
 
-          {/* Delete */}
-          <button
-            onClick={() => onDelete(task.id)}
-            style={{
-              marginTop: '10px',
-              fontSize: '12px',
-              color: 'var(--text-tertiary)',
-              background: 'none',
-              padding: '4px 0',
-            }}
-          >
-            删除任务
-          </button>
+          {/* Actions */}
+          <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+            <button
+              onClick={() => onUpdateDay(task.id, task.day)}
+              style={{ fontSize: '12px', color: 'var(--text-tertiary)', background: 'none', padding: '4px 0' }}
+            >
+              {/* placeholder for alignment */}
+            </button>
+            <button
+              onClick={() => onDelete(task.id)}
+              style={{
+                fontSize: '12px',
+                color: 'var(--danger)',
+                background: 'var(--danger-bg)',
+                padding: '4px 12px',
+                borderRadius: '8px',
+                marginLeft: 'auto',
+              }}
+            >
+              删除
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -166,10 +227,11 @@ function AddTaskModal({ onClose, onAdd }) {
   const [title, setTitle] = useState('')
   const [priority, setPriority] = useState('normal')
   const [category, setCategory] = useState('breakthrough')
+  const [day, setDay] = useState(null)
 
   const handleSubmit = () => {
     if (!title.trim()) return
-    onAdd({ title: title.trim(), priority, category })
+    onAdd({ title: title.trim(), priority, category, day })
     onClose()
   }
 
@@ -194,7 +256,7 @@ function AddTaskModal({ onClose, onAdd }) {
         </div>
 
         <div style={{ marginBottom: '12px' }}>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="任务名称" autoFocus style={{ fontSize: '15px' }} />
+          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="任务名称" autoFocus style={{ fontSize: '16px' }} />
         </div>
 
         <div style={{ marginBottom: '12px' }}>
@@ -221,7 +283,7 @@ function AddTaskModal({ onClose, onAdd }) {
           </div>
         </div>
 
-        <div style={{ marginBottom: '16px' }}>
+        <div style={{ marginBottom: '12px' }}>
           <label style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px', display: 'block' }}>类别</label>
           <div style={{ display: 'flex', gap: '8px' }}>
             {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
@@ -240,6 +302,41 @@ function AddTaskModal({ onClose, onAdd }) {
                 }}
               >
                 {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px', display: 'block' }}>分配到</label>
+          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setDay(null)}
+              style={{
+                padding: '6px 10px',
+                borderRadius: '8px',
+                fontSize: '12px',
+                background: day === null ? 'var(--accent-bg)' : 'var(--bg-input)',
+                color: day === null ? 'var(--accent)' : 'var(--text-secondary)',
+                fontWeight: 500,
+              }}
+            >
+              不限
+            </button>
+            {DAY_NAMES.map((name, i) => (
+              <button
+                key={i}
+                onClick={() => setDay(i)}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                  background: day === i ? 'var(--accent-bg)' : 'var(--bg-input)',
+                  color: day === i ? 'var(--accent)' : 'var(--text-secondary)',
+                  fontWeight: day === i ? 600 : 400,
+                }}
+              >
+                {name}
               </button>
             ))}
           </div>
@@ -266,11 +363,13 @@ function AddTaskModal({ onClose, onAdd }) {
 }
 
 export default function Tasks() {
+  const navigate = useNavigate()
   const tasks = useStore((s) => s.tasks)
   const cycleTaskStatus = useStore((s) => s.cycleTaskStatus)
   const addTask = useStore((s) => s.addTask)
   const addTaskNote = useStore((s) => s.addTaskNote)
   const deleteTask = useStore((s) => s.deleteTask)
+  const updateTask = useStore((s) => s.updateTask)
   const [filter, setFilter] = useState('all')
   const [showAdd, setShowAdd] = useState(false)
 
@@ -286,6 +385,7 @@ export default function Tasks() {
       'in-progress': tasks.filter((t) => t.status === 'in-progress').length,
       done: tasks.filter((t) => t.status === 'done').length,
       paused: tasks.filter((t) => t.status === 'paused').length,
+      'not-doing': tasks.filter((t) => t.status === 'not-doing').length,
     }),
     [tasks]
   )
@@ -301,7 +401,28 @@ export default function Tasks() {
   return (
     <div className="page-content" style={{ padding: '16px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)' }}>任务池</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)' }}>任务池</div>
+          {counts['not-doing'] > 0 && (
+            <button
+              onClick={() => navigate('/not-doing')}
+              style={{
+                padding: '4px 10px',
+                borderRadius: '8px',
+                background: 'var(--danger-bg)',
+                color: 'var(--danger)',
+                fontSize: '12px',
+                fontWeight: 500,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
+              <Ban size={12} />
+              不做 ({counts['not-doing']})
+            </button>
+          )}
+        </div>
         <button
           onClick={() => setShowAdd(true)}
           style={{
@@ -363,6 +484,7 @@ export default function Tasks() {
             onCycleStatus={cycleTaskStatus}
             onAddNote={addTaskNote}
             onDelete={deleteTask}
+            onUpdateDay={(id, day) => updateTask(id, { day })}
           />
         ))
       )}
