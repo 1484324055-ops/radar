@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Zap, Target, CheckCircle2, Clock, Pause, TrendingUp, ChevronRight, Settings } from 'lucide-react'
+import { Zap, Target, CheckCircle2, Clock, Pause, TrendingUp, ChevronRight, Settings, HelpCircle } from 'lucide-react'
 import useStore from '../stores/useStore'
 import { STATUS, DAY_ROLES } from '../utils/constants'
 import { getDayIndex, getTodayLabel, getWeekLabel, isThisWeek } from '../utils/helpers'
@@ -67,21 +67,38 @@ export default function Dashboard() {
           <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>{getTodayLabel()}</div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)' }}>雷达</div>
         </div>
-        <button
-          onClick={() => navigate('/settings')}
-          style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '10px',
-            background: 'var(--bg-tertiary)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--text-secondary)',
-          }}
-        >
-          <Settings size={18} />
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            onClick={() => navigate('/help')}
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              background: 'var(--bg-tertiary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--text-secondary)',
+            }}
+          >
+            <HelpCircle size={18} />
+          </button>
+          <button
+            onClick={() => navigate('/settings')}
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              background: 'var(--bg-tertiary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--text-secondary)',
+            }}
+          >
+            <Settings size={18} />
+          </button>
+        </div>
       </div>
 
       {/* Day Role */}

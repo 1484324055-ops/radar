@@ -14,6 +14,7 @@ import Week from './pages/Week'
 import Stats from './pages/Stats'
 import Settings from './pages/Settings'
 import NotDoing from './pages/NotDoing'
+import Help from './pages/Help'
 
 const ONBOARDING_KEY = 'radar-onboarding-done'
 
@@ -77,6 +78,7 @@ export default function App() {
           <Route path="/week" element={<Week />} />
           <Route path="/stats" element={<Stats />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/help" element={<Help />} />
         </Routes>
       </div>
       <TabBar />
