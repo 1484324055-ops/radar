@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowLeft, Moon, Sun, Palette, Download, Upload, Trash2, Info } from 'lucide-react'
+import { ArrowLeft, Moon, Sun, Palette, Download, Upload, Trash2, Info, RotateCcw } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import useStore from '../stores/useStore'
 import { THEMES, THEME_LABELS } from '../utils/constants'
@@ -239,6 +239,32 @@ export default function Settings() {
             清除所有数据
           </button>
         )}
+      </div>
+
+      {/* Replay Onboarding */}
+      <div className="card" style={{ marginBottom: '16px' }}>
+        <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '12px' }}>新手引导</div>
+        <button
+          onClick={() => {
+            localStorage.removeItem('radar-onboarding-done')
+            window.dispatchEvent(new Event('replay-onboarding'))
+          }}
+          style={{
+            width: '100%',
+            padding: '12px 16px',
+            borderRadius: '12px',
+            background: 'var(--accent-bg)',
+            color: 'var(--accent)',
+            fontSize: '14px',
+            fontWeight: 500,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
+          <RotateCcw size={16} />
+          重新查看新手引导
+        </button>
       </div>
 
       {/* About */}

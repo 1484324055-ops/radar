@@ -59,6 +59,9 @@ export default function App() {
     if (!localStorage.getItem(ONBOARDING_KEY)) {
       setShowOnboarding(true)
     }
+    const handleReplay = () => setShowOnboarding(true)
+    window.addEventListener('replay-onboarding', handleReplay)
+    return () => window.removeEventListener('replay-onboarding', handleReplay)
   }, [])
 
   const handleOnboardingComplete = () => {
