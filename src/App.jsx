@@ -98,9 +98,11 @@ export default function App() {
     const handleReplay = () => setShowOnboarding(true)
     window.addEventListener('replay-onboarding', handleReplay)
 
-    // Auto-sync on app load if configured
+    // Auto-sync on app load: pull cloud data first, then push
     if (isConfigured()) {
-      useStore.getState().autoSync()
+      useStore.getState().pullFromCloud().then(() => {
+        useStore.getState().autoSync()
+      })
     }
 
     return () => window.removeEventListener('replay-onboarding', handleReplay)
