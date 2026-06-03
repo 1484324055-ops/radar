@@ -10,17 +10,19 @@ function ConvertModal({ capture, onConvert, onDismiss, onDelete }) {
   const [category, setCategory] = useState('breakthrough')
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'flex-end' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
       <div onClick={onDismiss} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }} />
       <div
         style={{
           position: 'relative',
           width: '100%',
-          maxHeight: '85vh',
+          maxWidth: '420px',
+          maxHeight: 'min(70vh, 500px)',
           background: 'var(--bg-secondary)',
-          borderRadius: '20px 20px 0 0',
+          borderRadius: '20px',
           display: 'flex',
           flexDirection: 'column',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
         }}
       >
         {/* Scrollable content */}
@@ -91,7 +93,7 @@ function ConvertModal({ capture, onConvert, onDismiss, onDelete }) {
         </div>
 
         {/* Pinned action buttons */}
-        <div style={{ padding: '16px 20px', paddingBottom: 'calc(16px + var(--sab))', borderTop: '1px solid var(--border-light)', display: 'flex', gap: '10px', flexShrink: 0 }}>
+        <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border-light)', display: 'flex', gap: '10px', flexShrink: 0 }}>
           <button
             onClick={onDelete}
             style={{
