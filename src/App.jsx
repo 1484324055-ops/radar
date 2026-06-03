@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom'
 import { Plus, X } from 'lucide-react'
 import useTheme from './hooks/useTheme'
 import useStore from './stores/useStore'
+import { isConfigured } from './utils/sync'
 import TabBar from './components/TabBar'
 import QuickCapture from './components/QuickCapture'
 import Onboarding from './components/Onboarding'
@@ -96,6 +97,12 @@ export default function App() {
     }
     const handleReplay = () => setShowOnboarding(true)
     window.addEventListener('replay-onboarding', handleReplay)
+
+    // Auto-sync on app load if configured
+    if (isConfigured()) {
+      useStore.getState().autoSync()
+    }
+
     return () => window.removeEventListener('replay-onboarding', handleReplay)
   }, [])
 

@@ -13,7 +13,6 @@ function TaskCard({ task, onStatusChange, onAddNote, onDelete, onUpdateDay, onNo
   const [expanded, setExpanded] = useState(false)
   const [noteText, setNoteText] = useState('')
   const [showStatusPicker, setShowStatusPicker] = useState(false)
-  const longPressRef = useRef(null)
 
   const statusColors = {
     'not-started': 'var(--text-tertiary)',
@@ -29,29 +28,8 @@ function TaskCard({ task, onStatusChange, onAddNote, onDelete, onUpdateDay, onNo
     setNoteText('')
   }
 
-  // Long press to show status picker
-  const handlePointerDown = () => {
-    longPressRef.current = setTimeout(() => {
-      hapticLight()
-      setShowStatusPicker(true)
-    }, 500)
-  }
-
-  const handlePointerUp = () => {
-    if (longPressRef.current) {
-      clearTimeout(longPressRef.current)
-      longPressRef.current = null
-    }
-  }
-
   const cardContent = (
-    <div
-      className="card"
-      style={{ marginBottom: 0, padding: '12px 14px' }}
-      onTouchStart={handlePointerDown}
-      onTouchEnd={handlePointerUp}
-      onTouchCancel={handlePointerUp}
-    >
+    <div className="card" style={{ marginBottom: 0, padding: '12px 14px' }}>
       <div
         style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
         onClick={() => setExpanded(!expanded)}
@@ -136,21 +114,23 @@ function TaskCard({ task, onStatusChange, onAddNote, onDelete, onUpdateDay, onNo
             <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>{task.description}</div>
           )}
 
-          {/* Day Assignment */}
-          <div style={{ marginBottom: '10px' }}>
+          {/* Day Assignment - horizontal scroll */}
+          <div style={{ marginBottom: '12px' }}>
             <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <Calendar size={12} /> 分配到
             </div>
-            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', paddingBottom: '2px' }}>
               <button
                 onClick={() => onUpdateDay(task.id, null)}
                 style={{
-                  padding: '4px 10px',
+                  padding: '6px 12px',
                   borderRadius: '8px',
-                  fontSize: '12px',
+                  fontSize: '13px',
                   background: task.day === null || task.day === undefined ? 'var(--accent-bg)' : 'var(--bg-tertiary)',
                   color: task.day === null || task.day === undefined ? 'var(--accent)' : 'var(--text-tertiary)',
                   fontWeight: 500,
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
                 }}
               >
                 不限
@@ -160,12 +140,14 @@ function TaskCard({ task, onStatusChange, onAddNote, onDelete, onUpdateDay, onNo
                   key={i}
                   onClick={() => onUpdateDay(task.id, i)}
                   style={{
-                    padding: '4px 10px',
+                    padding: '6px 12px',
                     borderRadius: '8px',
-                    fontSize: '12px',
+                    fontSize: '13px',
                     background: task.day === i ? 'var(--accent-bg)' : 'var(--bg-tertiary)',
                     color: task.day === i ? 'var(--accent)' : 'var(--text-tertiary)',
                     fontWeight: task.day === i ? 600 : 400,
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
                   }}
                 >
                   {name}
@@ -224,15 +206,36 @@ function TaskCard({ task, onStatusChange, onAddNote, onDelete, onUpdateDay, onNo
           </div>
 
           {/* Actions */}
-          <div style={{ display: 'flex', gap: '8px', marginTop: '10px', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
+            <button
+              onClick={() => setShowStatusPicker(true)}
+              style={{
+                flex: 1,
+                height: '44px',
+                borderRadius: '10px',
+                background: 'var(--accent-bg)',
+                color: 'var(--accent)',
+                fontSize: '14px',
+                fontWeight: 500,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+              }}
+            >
+              切换状态
+            </button>
             <button
               onClick={() => onNotDoing(task.id)}
               style={{
-                fontSize: '12px',
-                color: 'var(--text-tertiary)',
+                height: '44px',
+                padding: '0 16px',
+                borderRadius: '10px',
                 background: 'var(--bg-tertiary)',
-                padding: '4px 12px',
-                borderRadius: '8px',
+                color: 'var(--text-tertiary)',
+                fontSize: '14px',
+                fontWeight: 500,
+                flexShrink: 0,
               }}
             >
               不做
@@ -240,11 +243,14 @@ function TaskCard({ task, onStatusChange, onAddNote, onDelete, onUpdateDay, onNo
             <button
               onClick={() => onDelete(task.id)}
               style={{
-                fontSize: '12px',
-                color: 'var(--danger)',
+                height: '44px',
+                padding: '0 16px',
+                borderRadius: '10px',
                 background: 'var(--danger-bg)',
-                padding: '4px 12px',
-                borderRadius: '8px',
+                color: 'var(--danger)',
+                fontSize: '14px',
+                fontWeight: 500,
+                flexShrink: 0,
               }}
             >
               删除

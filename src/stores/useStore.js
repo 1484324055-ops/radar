@@ -36,10 +36,23 @@ const defaultState = {
   saveError: null,
 }
 
+// Debounced auto-sync trigger
+let syncTimer = null
+function triggerAutoSync() {
+  if (syncTimer) clearTimeout(syncTimer)
+  syncTimer = setTimeout(() => {
+    if (isConfigured()) {
+      const { theme, captures, tasks, campaigns, dailyLogs } = useStore.getState()
+      saveToGist({ theme, captures, tasks, campaigns, dailyLogs }).catch(() => {})
+    }
+  }, 3000)
+}
+
 // Helper: save and return state update with error handling
 function save(s, updates) {
   const merged = { ...s, ...updates }
   const err = saveToStorage(merged)
+  triggerAutoSync()
   return { ...updates, saveError: err }
 }
 

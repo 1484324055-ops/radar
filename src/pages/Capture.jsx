@@ -40,22 +40,22 @@ export default function Capture() {
   const recentCaptures = captures.filter((c) => !c.processed).slice(0, 5)
 
   return (
-    <div className="page-content" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div className="page-content" style={{ padding: '16px' }}>
       {/* Header */}
-      <div style={{ padding: '16px 16px 0' }}>
+      <div>
         <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>倾倒</div>
         <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>脑子里在想什么？直接倒出来，不分类、不判断</div>
       </div>
 
       {/* Input Area */}
-      <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ marginTop: '16px' }}>
         <textarea
           ref={inputRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="写下来..."
-          rows={6}
+          rows={5}
           style={{
             background: 'var(--bg-input)',
             border: '1px solid var(--border)',
@@ -64,8 +64,8 @@ export default function Capture() {
             fontSize: '16px',
             color: 'var(--text-primary)',
             resize: 'none',
-            flex: 1,
-            minHeight: '150px',
+            width: '100%',
+            minHeight: '120px',
           }}
         />
 
@@ -166,7 +166,7 @@ export default function Capture() {
 
       {/* Recent */}
       {recentCaptures.length > 0 && (
-        <div style={{ padding: '0 16px 16px' }}>
+        <div style={{ marginTop: '16px' }}>
           <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginBottom: '8px' }}>最近倾倒</div>
           {recentCaptures.map((c) => (
             <div

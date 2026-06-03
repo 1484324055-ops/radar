@@ -29,7 +29,7 @@ function StatCard({ icon, label, value, color, onClick }) {
   )
 }
 
-function PipelineHint({ unprocessed, unassigned }) {
+function PipelineHint({ unprocessed, unassigned, navigate }) {
   if (unprocessed === 0 && unassigned === 0) return null
 
   return (
@@ -52,7 +52,7 @@ function PipelineHint({ unprocessed, unassigned }) {
           <button
             onClick={() => {
               hapticLight()
-              window.location.hash = '#/inbox'
+              navigate('/inbox')
             }}
             style={{
               display: 'flex',
@@ -73,7 +73,7 @@ function PipelineHint({ unprocessed, unassigned }) {
           <button
             onClick={() => {
               hapticLight()
-              window.location.hash = '#/tasks'
+              navigate('/tasks')
             }}
             style={{
               display: 'flex',
@@ -258,7 +258,7 @@ export default function Dashboard() {
       <CampaignCountdown campaign={activeCampaign} />
 
       {/* Pipeline Hints */}
-      <PipelineHint unprocessed={stats.unprocessed} unassigned={unassignedTasks} />
+      <PipelineHint unprocessed={stats.unprocessed} unassigned={unassignedTasks} navigate={navigate} />
 
       {/* Today's Tasks */}
       {todayTasks.length > 0 && (
