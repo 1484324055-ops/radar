@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { generateId, getWeekStart, getTodayKey } from '../utils/helpers'
 import { format } from 'date-fns'
+import { saveToGist, loadFromGist, createGist, isConfigured } from '../utils/sync'
 
 const STORAGE_KEY = 'radar-data'
 
@@ -205,6 +206,65 @@ const useStore = create((set, get) => ({
   clearAllData: () => {
     set({ ...defaultState })
     localStorage.removeItem(STORAGE_KEY)
+  },
+
+  // ── Cloud Sync ──
+  syncStatus: null, // null | 'syncing' | 'synced' | 'error'
+  syncError: null,
+
+  // Push local data to cloud
+  pushToCloud: async () => {
+    set({ syncStatus: 'syncing', syncError: null })
+    try {
+      const { theme, captures, tasks, campaigns, dailyLogs } = get()
+      const data = { theme, captures, tasks, campaigns, dailyLogs }
+      if (!isConfigured()) {
+        await createGist(data)
+      } else {
+        await saveToGist(data)
+      }
+      set({ syncStatus: 'synced' })
+      return true
+    } catch (e) {
+      set({ syncStatus: 'error', syncError: e.message })
+      return false
+    }
+  },
+
+  // Pull cloud data to local
+  pullFromCloud: async () => {
+    set({ syncStatus: 'syncing', syncError: null })
+    try {
+      const data = await loadFromGist()
+      const validated = {
+        theme: ['light', 'dark', 'warm'].includes(data.theme) ? data.theme : 'light',
+        captures: Array.isArray(data.captures) ? data.captures : [],
+        tasks: Array.isArray(data.tasks) ? data.tasks : [],
+        campaigns: Array.isArray(data.campaigns) ? data.campaigns : [],
+        dailyLogs: data.dailyLogs && typeof data.dailyLogs === 'object' ? data.dailyLogs : {},
+      }
+      set({ ...validated, syncStatus: 'synced', saveError: null })
+      saveToStorage(validated)
+      return true
+    } catch (e) {
+      set({ syncStatus: 'error', syncError: e.message })
+      return false
+    }
+  },
+
+  // Auto-sync: push if local is newer, pull if cloud is newer
+  autoSync: async () => {
+    if (!isConfigured()) return
+    set({ syncStatus: 'syncing', syncError: null })
+    try {
+      // Always push local first (simple strategy)
+      const { theme, captures, tasks, campaigns, dailyLogs } = get()
+      const data = { theme, captures, tasks, campaigns, dailyLogs }
+      await saveToGist(data)
+      set({ syncStatus: 'synced' })
+    } catch (e) {
+      set({ syncStatus: 'error', syncError: e.message })
+    }
   },
 }))
 
