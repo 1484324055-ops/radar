@@ -2,10 +2,12 @@
 
 /* iPhone 13 Pro safe areas */
 :root {
-  --sat: env(safe-area-inset-top);
-  --sab: env(safe-area-inset-bottom);
-  --sal: env(safe-area-inset-left);
-  --sar: env(safe-area-inset-right);
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  /* iPhone 13 Pro notch = 47px, ensure minimum safe area */
+  --sat-min: max(var(--sat), 47px);
 }
 
 /* Light theme (default) */
@@ -146,7 +148,7 @@ body {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding-top: var(--sat);
+  padding-top: var(--sat-min);
 }
 
 /* Custom scrollbar */

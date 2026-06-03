@@ -1,21 +1,11 @@
-import { useMemo, lazy, Suspense } from 'react'
+import { useMemo } from 'react'
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts'
 import { TrendingUp, Target, CheckCircle2, Clock } from 'lucide-react'
 import useStore from '../stores/useStore'
 import { STATUS, CATEGORY_LABELS } from '../utils/constants'
 import { getPastWeeks, getThisWeekTasks } from '../utils/helpers'
 
-// Dynamic import recharts to reduce initial bundle size
-const RechartsLazy = lazy(() => import('recharts').then(m => ({ default: m })))
-
 const COLORS = ['#8B5CF6', '#F97316', '#06B6D4']
-
-function ChartFallback() {
-  return (
-    <div style={{ height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)', fontSize: '13px' }}>
-      加载图表中...
-    </div>
-  )
-}
 
 function StatBox({ icon, label, value, color }) {
   return (
@@ -24,86 +14,6 @@ function StatBox({ icon, label, value, color }) {
       <div style={{ fontSize: '24px', fontWeight: 700, color: color || 'var(--text-primary)' }}>{value}</div>
       <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{label}</div>
     </div>
-  )
-}
-
-function CategoryChart({ data, total }) {
-  if (total === 0) {
-    return <div style={{ textAlign: 'center', padding: '20px', fontSize: '13px', color: 'var(--text-tertiary)' }}>本周还没有任务</div>
-  }
-
-  return (
-    <Suspense fallback={<ChartFallback />}>
-      <RechartsLazy>
-        {({ PieChart, Pie, Cell, ResponsiveContainer }) => (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ width: '120px', height: '120px', flexShrink: 0 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={data.filter((d) => d.value > 0)}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={30}
-                    outerRadius={50}
-                    paddingAngle={4}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {data.filter((d) => d.value > 0).map((entry, i) => (
-                      <Cell key={entry.key} fill={COLORS[i]} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div style={{ flex: 1 }}>
-              {data.map((d, i) => (
-                <div key={d.key} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                  <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: COLORS[i], flexShrink: 0 }} />
-                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)', flex: 1 }}>{d.name}</span>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{d.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </RechartsLazy>
-    </Suspense>
-  )
-}
-
-function TrendChart({ data }) {
-  if (!data.some((d) => d.total > 0)) {
-    return <div style={{ textAlign: 'center', padding: '20px', fontSize: '13px', color: 'var(--text-tertiary)' }}>暂无数据</div>
-  }
-
-  return (
-    <Suspense fallback={<ChartFallback />}>
-      <RechartsLazy>
-        {({ BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer }) => (
-          <div style={{ width: '100%', height: '180px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data} barGap={2}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'var(--text-tertiary)' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: 'var(--text-tertiary)' }} axisLine={false} tickLine={false} width={30} />
-                <Tooltip
-                  contentStyle={{
-                    background: 'var(--bg-card)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '10px',
-                    fontSize: '12px',
-                  }}
-                />
-                <Bar dataKey="total" fill="var(--accent-bg)" radius={[4, 4, 0, 0]} name="任务" />
-                <Bar dataKey="done" fill="var(--accent)" radius={[4, 4, 0, 0]} name="完成" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-      </RechartsLazy>
-    </Suspense>
   )
 }
 
@@ -177,13 +87,69 @@ export default function Stats() {
       {/* Category Pie */}
       <div className="card" style={{ marginBottom: '16px' }}>
         <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '12px' }}>时间分配</div>
-        <CategoryChart data={categoryData} total={weekStats.total} />
+        {weekStats.total > 0 ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ width: '120px', height: '120px', flexShrink: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={categoryData.filter((d) => d.value > 0)}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={30}
+                    outerRadius={50}
+                    paddingAngle={4}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {categoryData.filter((d) => d.value > 0).map((entry, i) => (
+                      <Cell key={entry.key} fill={COLORS[i]} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div style={{ flex: 1 }}>
+              {categoryData.map((d, i) => (
+                <div key={d.key} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                  <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: COLORS[i], flexShrink: 0 }} />
+                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)', flex: 1 }}>{d.name}</span>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{d.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '20px', fontSize: '13px', color: 'var(--text-tertiary)' }}>本周还没有任务</div>
+        )}
       </div>
 
       {/* Weekly Trend */}
       <div className="card" style={{ marginBottom: '16px' }}>
         <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '12px' }}>周趋势</div>
-        <TrendChart data={weeklyTrend} />
+        {weeklyTrend.some((d) => d.total > 0) ? (
+          <div style={{ width: '100%', height: '180px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={weeklyTrend} barGap={2}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'var(--text-tertiary)' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: 'var(--text-tertiary)' }} axisLine={false} tickLine={false} width={30} />
+                <Tooltip
+                  contentStyle={{
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '10px',
+                    fontSize: '12px',
+                  }}
+                />
+                <Bar dataKey="total" fill="var(--accent-bg)" radius={[4, 4, 0, 0]} name="任务" />
+                <Bar dataKey="done" fill="var(--accent)" radius={[4, 4, 0, 0]} name="完成" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '20px', fontSize: '13px', color: 'var(--text-tertiary)' }}>暂无数据</div>
+        )}
       </div>
 
       {/* Campaign History */}
