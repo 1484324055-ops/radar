@@ -16,77 +16,82 @@ function ConvertModal({ capture, onConvert, onDismiss, onDelete }) {
         style={{
           position: 'relative',
           width: '100%',
+          maxHeight: '85vh',
           background: 'var(--bg-secondary)',
           borderRadius: '20px 20px 0 0',
-          padding: '20px',
-          paddingBottom: 'calc(20px + var(--sab))',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
-        <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '16px' }}>翻译成任务</div>
+        {/* Scrollable content */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px', paddingBottom: '0' }}>
+          <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '16px' }}>翻译成任务</div>
 
-        <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginBottom: '8px', padding: '10px', background: 'var(--bg-tertiary)', borderRadius: '10px' }}>
-          "{capture.content.length > 100 ? capture.content.slice(0, 100) + '…' : capture.content}"
-        </div>
+          <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginBottom: '8px', padding: '10px', background: 'var(--bg-tertiary)', borderRadius: '10px' }}>
+            "{capture.content.length > 100 ? capture.content.slice(0, 100) + '…' : capture.content}"
+          </div>
 
-        <div style={{ marginBottom: '12px' }}>
-          <label style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>任务名称</label>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="这个任务是什么？"
-            style={{ fontSize: '15px' }}
-          />
-        </div>
+          <div style={{ marginBottom: '12px' }}>
+            <label style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>任务名称</label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="这个任务是什么？"
+              style={{ fontSize: '16px' }}
+            />
+          </div>
 
-        <div style={{ marginBottom: '12px' }}>
-          <label style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px', display: 'block' }}>优先级</label>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {Object.entries(PRIORITY_LABELS).map(([key, label]) => (
-              <button
-                key={key}
-                onClick={() => setPriority(key)}
-                style={{
-                  flex: 1,
-                  padding: '8px',
-                  borderRadius: '10px',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  background: priority === key ? 'var(--accent-bg)' : 'var(--bg-input)',
-                  color: priority === key ? 'var(--accent)' : 'var(--text-secondary)',
-                  border: priority === key ? '1px solid var(--accent-border)' : '1px solid var(--border)',
-                }}
-              >
-                {label}
-              </button>
-            ))}
+          <div style={{ marginBottom: '12px' }}>
+            <label style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px', display: 'block' }}>优先级</label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {Object.entries(PRIORITY_LABELS).map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => setPriority(key)}
+                  style={{
+                    flex: 1,
+                    padding: '8px',
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    background: priority === key ? 'var(--accent-bg)' : 'var(--bg-input)',
+                    color: priority === key ? 'var(--accent)' : 'var(--text-secondary)',
+                    border: priority === key ? '1px solid var(--accent-border)' : '1px solid var(--border)',
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px', display: 'block' }}>类别</label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => setCategory(key)}
+                  style={{
+                    flex: 1,
+                    padding: '8px',
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    background: category === key ? `var(--${key}-bg)` : 'var(--bg-input)',
+                    color: category === key ? `var(--${key})` : 'var(--text-secondary)',
+                    border: category === key ? `1px solid var(--${key})` : '1px solid var(--border)',
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px', display: 'block' }}>类别</label>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
-              <button
-                key={key}
-                onClick={() => setCategory(key)}
-                style={{
-                  flex: 1,
-                  padding: '8px',
-                  borderRadius: '10px',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  background: category === key ? `var(--${key}-bg)` : 'var(--bg-input)',
-                  color: category === key ? `var(--${key})` : 'var(--text-secondary)',
-                  border: category === key ? `1px solid var(--${key})` : '1px solid var(--border)',
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: '10px' }}>
+        {/* Pinned action buttons */}
+        <div style={{ padding: '16px 20px', paddingBottom: 'calc(16px + var(--sab))', borderTop: '1px solid var(--border-light)', display: 'flex', gap: '10px', flexShrink: 0 }}>
           <button
             onClick={onDelete}
             style={{
@@ -98,6 +103,7 @@ function ConvertModal({ capture, onConvert, onDismiss, onDelete }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              flexShrink: 0,
             }}
           >
             <Trash2 size={18} />
